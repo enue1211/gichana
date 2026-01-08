@@ -6,13 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>귀차니스트의 방랑</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              lazy: {
+                50: '#fdf8f6',
+                100: '#f2e8e5',
+                200: '#eaddd7',
+                500: '#ff6b35',
+                600: '#e85a2a',
+                900: '#1a1c1e',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" crossorigin="anonymous">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
+      
       body {
         font-family: 'Pretendard', sans-serif;
-        background-color: #f8fafc;
+        background-color: #fdf8f6;
+        color: #1a1c1e;
+        overflow-x: hidden;
       }
+
+      .glass {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      /* 레이아웃 깨짐 방지를 위한 애니메이션 정의 */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .fade-in-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+
+      .card-shadow {
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+      }
+
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 <script type="importmap">
 {
@@ -25,7 +70,7 @@
 }
 </script>
 </head>
-<body>
+<body class="selection:bg-lazy-100 selection:text-lazy-500">
     <div id="root"></div>
 </body>
 </html>

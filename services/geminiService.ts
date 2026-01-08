@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { TravelRequest, TravelResultContent, TransportMode } from "../types";
 
 export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResultContent> => {
+  // process.env.API_KEY는 환경 설정에서 자동으로 주입됩니다.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const isPublic = req.transport === TransportMode.PUBLIC;
@@ -14,6 +15,7 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
     컨셉: '최소 이동', '노 웨이팅', '찍먹 여행'.
     
     중요 조건:
+    - 인원: ${req.participants} (인원수에 맞춰 너무 좁지 않거나, 혼자 가기 민망하지 않은 곳을 추천하세요)
     - 일정: ${req.duration}
     - 예산: ${req.budget} (이 금액 안에서 모든 일정, 식비, 입장료를 해결해야 함)
     - 맛집 포함 여부: ${req.includeFood ? '반드시 그 지역에서 가장 유명하고 검증된 맛집을 일정 중간에 끼워 넣으세요.' : '식사는 간단히 때우는 걸 선호하므로 식당보다는 위치가 좋은 카페나 근처 편의점 위주로 언급하세요.'}
@@ -41,6 +43,7 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
 
   const prompt = `
     지역: ${req.region}
+    인원: ${req.participants}
     일정: ${req.duration}
     성향: ${req.style}
     예산: ${req.budget}
@@ -51,38 +54,45 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
     위 조건에 맞춰 실제 장소들이 포함된 최단 거리 여행 코스를 짜줘.
   `;
 
-  // MUST use gemini-2.5-flash for googleMaps tool
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-    config: {
-      systemInstruction,
-      tools: [{ googleMaps: {} }],
-      ...(req.location && {
-        toolConfig: {
-          retrievalConfig: {
-            latLng: {
-              latitude: req.location.latitude,
-              longitude: req.location.longitude
+  try {
+    // Maps Grounding은 Gemini 2.5 시리즈에서만 지원됩니다.
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction,
+        tools: [{ googleMaps: {} }],
+        ...(req.location && {
+          toolConfig: {
+            retrievalConfig: {
+              latLng: {
+                latitude: req.location.latitude,
+                longitude: req.location.longitude
+              }
             }
           }
-        }
-      })
-    }
-  });
+        })
+      }
+    });
 
-  const text = response.text || "코스를 생성할 수 없습니다.";
-  const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  
-  const links: { title: string; uri: string }[] = [];
-  groundingChunks.forEach((chunk: any) => {
-    if (chunk.maps) {
-      links.push({
-        title: chunk.maps.title,
-        uri: chunk.maps.uri
-      });
-    }
-  });
+    const text = response.text || "코스를 생성할 수 없습니다.";
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    
+    const links: { title: string; uri: string }[] = [];
+    groundingChunks.forEach((chunk: any) => {
+      if (chunk.maps) {
+        links.push({
+          title: chunk.maps.title,
+          uri: chunk.maps.uri
+        });
+      }
+    });
 
-  return { text, links };
+    return { text, links };
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    let message = "여행 코스를 불러오는 중 오류가 발생했습니다.";
+    if (error.message?.includes("429")) message = "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+    throw new Error(message);
+  }
 };

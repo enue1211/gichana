@@ -37,12 +37,19 @@ export enum Budget {
   KRW_MORE = '그 이상'
 }
 
+export enum Participant {
+  SOLO = '1인 (완벽한 고독)',
+  SMALL = '2~3인 (소수 정예)',
+  LARGE = '4인 이상 (단체/가족)'
+}
+
 export interface TravelRequest {
   region: Region;
   duration: Duration;
   style: TravelStyle;
   budget: Budget;
   transport: TransportMode;
+  participants: Participant;
   includeFood: boolean;
   location?: {
     latitude: number;
@@ -71,4 +78,5 @@ export interface SavedTravel {
   transport?: TransportMode;
   duration?: Duration;
   budget?: Budget;
+  participants?: Participant;
 }
