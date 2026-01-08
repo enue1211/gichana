@@ -15,8 +15,7 @@ export enum Region {
   GYEONGJU = '경주 (황리단길 껌딱지)',
   INCHEON = '인천 (공항 근처/송도)',
   SOKCHO = '속초 (중앙시장 먹방)',
-  YEOSU = '여수 (밤바다 호캉스)',
-  OVERSEAS = '해외 (비행기 타기 전부터 힘듦)'
+  YEOSU = '여수 (밤바다 호캉스)'
 }
 
 export enum TransportMode {
@@ -31,10 +30,10 @@ export enum Duration {
 }
 
 export enum Budget {
-  KRW_10 = '10만원',
-  KRW_20 = '20만원',
-  KRW_30 = '30만원',
-  KRW_MORE = '그 이상'
+  KRW_10 = '10만원 이하',
+  KRW_20 = '20만원 대',
+  KRW_30 = '30만원 대',
+  KRW_MORE = '럭셔리(무제한)'
 }
 
 export enum Participant {
@@ -51,7 +50,7 @@ export interface TravelRequest {
   transport: TransportMode;
   participants: Participant;
   includeFood: boolean;
-  lazinessLevel: number; // 1-5 (5 is most lazy)
+  lazinessLevel: number;
   location?: {
     latitude: number;
     longitude: number;
@@ -76,8 +75,4 @@ export interface SavedTravel {
   savedAt: string;
   region: Region;
   totalDifficulty: number;
-  transport?: TransportMode;
-  duration?: Duration;
-  budget?: Budget;
-  participants?: Participant;
 }

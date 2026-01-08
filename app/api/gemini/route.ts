@@ -1,5 +1,7 @@
+
 import { NextResponse } from "next/server";
-// import { GoogleGenerativeAI } from "@google/generative-ai";
+// Always use the correct import for GoogleGenAI
+import { GoogleGenAI } from "@google/genai";
 
 export const runtime = "nodejs";
 
@@ -7,16 +9,18 @@ export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "Missing GEMINI_API_KEY" }, { status: 500 });
-    }
+    // Initialize using a named parameter and the mandatory process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    // Call generateContent directly using ai.models.generateContent as per guidelines
+    // Using gemini-3-flash-preview for general text tasks
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
 
-    // const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    // Access the text property directly (not as a method)
+    const text = response.text;
 
     return NextResponse.json({ text });
   } catch (e: any) {
