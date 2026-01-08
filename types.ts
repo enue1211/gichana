@@ -10,6 +10,12 @@ export enum Region {
   SEOUL = '서울 (지하철 역세권)',
   BUSAN = '부산 (바다만 잠깐)',
   JEJU = '제주 (주차장 넓은 곳)',
+  GANGNEUNG = '강릉 (바다 산책 최단거리)',
+  JEONJU = '전주 (한옥마을 엎어지면 코 앞)',
+  GYEONGJU = '경주 (황리단길 껌딱지)',
+  INCHEON = '인천 (공항 근처/송도)',
+  SOKCHO = '속초 (중앙시장 먹방)',
+  YEOSU = '여수 (밤바다 호캉스)',
   OVERSEAS = '해외 (비행기 타기 전부터 힘듦)'
 }
 
