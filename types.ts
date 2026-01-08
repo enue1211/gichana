@@ -15,7 +15,8 @@ export enum Region {
   GYEONGJU = '경주 (황리단길 껌딱지)',
   INCHEON = '인천 (공항 근처/송도)',
   SOKCHO = '속초 (중앙시장 먹방)',
-  YEOSU = '여수 (밤바다 호캉스)'
+  YEOSU = '여수 (밤바다 호캉스)',
+  OVERSEAS = '해외 (가까운 이웃 나라)'
 }
 
 export enum TransportMode {

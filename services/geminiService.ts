@@ -1,12 +1,12 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { TravelRequest, TravelResultContent, TransportMode } from "../types";
+import { TravelRequest, TravelResultContent, TransportMode, Region } from "../types";
 
 export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResultContent> => {
-  // Initialize the Gemini client with the mandatory API key
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const isPublic = req.transport === TransportMode.PUBLIC;
+  const isOverseas = req.region === Region.OVERSEAS;
   const lazyLevelMap = ["살짝 귀찮음", "많이 귀찮음", "움직이면 사망", "침대와 합체", "영혼만 여행"];
   const lazyDescription = lazyLevelMap[req.lazinessLevel - 1];
 
@@ -25,6 +25,7 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
     - 이동 수단: ${req.transport}
     - 맛집: ${req.includeFood ? '유명 맛집 필수' : '카페나 편의점 선호'}
     
+    ${isOverseas ? '해외 여행의 경우, 비행 시간이 3시간 이내인 가까운 곳(일본, 타이완 등) 중 공항에서 시내 이동이 30분 이내인 곳만 추천할 것.' : ''}
     ${isPublic ? '반드시 지하철역 출구에서 도보 300m 이내인 장소만 추천할 것.' : '주차가 압도적으로 편하거나 발렛이 되는 곳만 추천할 것.'}
     
     응답 형식 (반드시 지킬 것):
@@ -39,11 +40,10 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
     [PHOTO] 사진 찍기 난이도 (1-5)
     ...
     
-    말투: "역에서 엎어지면 코 닿을 거리입니다. 제발 멀리 가지 마세요." 처럼 시니컬하게.
+    말투: "비행기 타는 것조차 사치지만, 정 가야겠다면 공항 앞 호텔에서 나오지 마세요." 처럼 시니컬하게.
   `;
 
   try {
-    // Maps grounding is only supported in Gemini 2.5 series models.
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `위 조건에 맞춰 실제 장소들이 포함된 최단 거리 여행 코스를 짜줘. 지역은 ${req.region}이야.`,
@@ -63,9 +63,7 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
       }
     });
 
-    // Access text property directly
     const text = response.text || "데이터를 가져오지 못했습니다.";
-    // Extract grounding chunks for citations as required by guidelines
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     
     const links: { title: string; uri: string }[] = [];
