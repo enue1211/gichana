@@ -4,55 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>귀차니스트의 방랑</title>
-    <!-- Tailwind CSS Play CDN: CORS 이슈 해결을 위해 속성 최적화 -->
+    <title>귀차니스트의 방랑 | 최소 동선 여행 가이드</title>
+    
+    <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // 스크립트 로드 실패 대비 및 설정
-      window.addEventListener('DOMContentLoaded', () => {
-        if (typeof tailwind !== 'undefined') {
-          tailwind.config = {
-            theme: {
-              extend: {
-                colors: {
-                  lazy: {
-                    50: '#fdf8f6',
-                    100: '#f2e8e5',
-                    200: '#eaddd7',
-                    500: '#ff6b35',
-                    600: '#e85a2a',
-                    900: '#1a1c1e',
-                  }
-                }
+      // 설정을 전역 스코프에 즉시 배치하여 @apply가 커스텀 컬러를 즉시 인식하게 함
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              lazy: {
+                50: '#fdf8f6',
+                100: '#f2e8e5',
+                200: '#eaddd7',
+                500: '#ff6b35',
+                600: '#e85a2a',
+                900: '#1a1c1e',
               }
+            },
+            borderRadius: {
+              '4xl': '2rem',
+              '5xl': '3rem',
             }
           }
-        } else {
-          console.error("Tailwind CSS를 로드할 수 없습니다. 네트워크 상태를 확인하세요.");
         }
-      });
+      }
     </script>
+    
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     
     <style type="text/tailwindcss">
       @layer base {
         body {
-          @apply font-['Noto_Sans_KR',_sans-serif] bg-lazy-50/30 text-lazy-900 m-0 p-0 min-h-screen overflow-x-hidden antialiased;
+          /* bg-lazy-50/30 대신 헥사코드 직접 활용 또는 설정 주입 확인 후 사용 */
+          @apply font-['Noto_Sans_KR',_sans-serif] bg-[#fdf8f6] text-lazy-900 m-0 p-0 min-h-screen overflow-x-hidden antialiased;
         }
       }
       @layer components {
         .glass {
-          @apply bg-white/85 backdrop-blur-xl border-b border-black/5;
+          @apply bg-white/80 backdrop-blur-2xl border-b border-black/5;
         }
         .fade-in-up {
-          animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+          animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .lazy-card {
+          @apply bg-white rounded-5xl shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500;
         }
       }
       @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
       }
     </style>
@@ -62,8 +66,10 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        background-image: 
+          radial-gradient(at 0% 0%, rgba(255, 107, 53, 0.05) 0px, transparent 50%),
+          radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
       }
-      /* 아이콘 수직 정렬 및 크기 고정 */
       .material-symbols-rounded {
         font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         display: inline-block;
@@ -73,6 +79,17 @@
         text-align: center;
         user-select: none;
         vertical-align: middle;
+      }
+      /* 스크롤바 숨기기 (선택사항) */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
       }
     </style>
     
@@ -90,7 +107,6 @@
 </head>
 <body class="selection:bg-lazy-100 selection:text-lazy-500">
     <div id="root"></div>
-    <!-- index.tsx 로드 시 crossorigin 속성을 간소화하여 로드 안정성 확보 -->
     <script type="module" src="./index.tsx" crossorigin></script>
 </body>
 </html>
