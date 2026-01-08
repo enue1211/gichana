@@ -44,7 +44,8 @@ const App: React.FC = () => {
     budget: Budget.KRW_20,
     participants: Participant.SOLO,
     transport: TransportMode.PUBLIC,
-    includeFood: true
+    includeFood: true,
+    lazinessLevel: 4
   });
   const [rawResult, setRawResult] = useState<{ text: string, links: GroundingLink[] } | null>(null);
   const [savedTravels, setSavedTravels] = useState<SavedTravel[]>([]);
@@ -168,11 +169,11 @@ const App: React.FC = () => {
               <img src="https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=2060&auto=format&fit=crop" className="w-full h-full object-cover opacity-60" alt="lazy travel" />
               <div className="absolute inset-0 bg-gradient-to-t from-lazy-900 via-lazy-900/40 to-transparent flex flex-col justify-end p-10 sm:p-14">
                 <div className="flex items-center gap-2 mb-6">
-                  <span className="bg-lazy-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">Life Strategy</span>
-                  <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold px-4 py-1.5 rounded-full border border-white/20">v2.1 Stable</span>
+                  <span className="bg-lazy-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">Service Concept</span>
+                  <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-bold px-4 py-1.5 rounded-full border border-white/20">Planning v2.5</span>
                 </div>
                 <h2 className="text-5xl sm:text-6xl font-black text-white leading-[1.05] mb-8 tracking-tighter">
-                  침대에서 문 앞,<br/><span className="text-lazy-500 italic">단 세 걸음</span>이면<br/>충분합니다.
+                  여행 가기 싫은<br/>사람을 위한<br/><span className="text-lazy-500 italic">침대 위 여정</span>
                 </h2>
                 <p className="text-slate-200 text-base sm:text-lg font-medium leading-relaxed max-w-sm opacity-90">
                   집 밖은 위험하지만, 어쩔 수 없이 떠나야 하는 당신을 위한 '최소 동선' 전문 큐레이션.
@@ -185,7 +186,7 @@ const App: React.FC = () => {
                 게으른 여정 설계하기
                 <span className="material-symbols-rounded text-3xl group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
               </button>
-              <p className="text-center text-slate-400 text-xs font-bold tracking-widest">최단 거리 연산을 위해 AI가 대기 중입니다</p>
+              <p className="text-center text-slate-400 text-xs font-bold tracking-widest uppercase">AI-Powered Minimalism Travel Planner</p>
             </div>
           </div>
         )}
@@ -193,10 +194,35 @@ const App: React.FC = () => {
         {step === 'form' && (
           <form onSubmit={handleSubmit} className="space-y-16 fade-in-up">
             <div className="space-y-20">
+              {/* 게으름 강도 */}
+              <section className="space-y-8">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-lazy-500">
+                      <span className="material-symbols-rounded">speed</span>
+                    </div>
+                    <h3 className="text-xl font-black text-slate-800">게으름 강도</h3>
+                  </div>
+                  <span className="text-lazy-500 font-black text-lg bg-slate-50 px-4 py-1 rounded-full">Lv.{request.lazinessLevel}</span>
+                </div>
+                <div className="px-2 space-y-4">
+                  <input 
+                    type="range" min="1" max="5" step="1" 
+                    value={request.lazinessLevel} 
+                    onChange={(e) => setRequest({...request, lazinessLevel: parseInt(e.target.value)})}
+                    className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-lazy-500"
+                  />
+                  <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span>살짝 귀찮음</span>
+                    <span>영혼만 여행</span>
+                  </div>
+                </div>
+              </section>
+
               {/* 기간 & 수단 */}
               <section className="space-y-8">
                 <div className="flex items-center gap-4 px-2">
-                  <div className="w-10 h-10 rounded-2xl bg-lazy-500/10 flex items-center justify-center text-lazy-500">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-lazy-500">
                     <span className="material-symbols-rounded">event_note</span>
                   </div>
                   <h3 className="text-xl font-black text-slate-800">어느 정도 누워있을까요?</h3>
@@ -223,7 +249,7 @@ const App: React.FC = () => {
               {/* 동행 */}
               <section className="space-y-8">
                 <div className="flex items-center gap-4 px-2">
-                  <div className="w-10 h-10 rounded-2xl bg-lazy-500/10 flex items-center justify-center text-lazy-500">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-lazy-500">
                     <span className="material-symbols-rounded">group_add</span>
                   </div>
                   <h3 className="text-xl font-black text-slate-800">누구랑 귀찮아질까요?</h3>
@@ -231,7 +257,7 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4">
                   {Object.values(Participant).map((p) => (
                     <button key={p} type="button" onClick={() => setRequest({ ...request, participants: p })}
-                      className={`flex flex-col items-center gap-4 py-10 rounded-5xl border-2 transition-all ${request.participants === p ? 'border-lazy-500 bg-lazy-50 text-lazy-500' : 'border-slate-50 bg-white text-slate-400 hover:border-slate-200'}`}>
+                      className={`flex flex-col items-center gap-4 py-10 rounded-5xl border-2 transition-all ${request.participants === p ? 'border-lazy-500 bg-slate-50 text-lazy-500' : 'border-slate-50 bg-white text-slate-400 hover:border-slate-200'}`}>
                       <span className="material-symbols-rounded text-4xl">{p.includes('1인') ? 'person' : p.includes('2~3인') ? 'diversity_1' : 'diversity_3'}</span>
                       <span className="font-black text-xs tracking-tight">{p.split(' ')[0]}</span>
                     </button>
@@ -242,7 +268,7 @@ const App: React.FC = () => {
               {/* 지역 */}
               <section className="space-y-8">
                 <div className="flex items-center gap-4 px-2">
-                  <div className="w-10 h-10 rounded-2xl bg-lazy-500/10 flex items-center justify-center text-lazy-500">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-lazy-500">
                     <span className="material-symbols-rounded">explore</span>
                   </div>
                   <h3 className="text-xl font-black text-slate-800">어디까지 갈 수 있나요?</h3>
@@ -250,7 +276,7 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {Object.values(Region).map((r) => (
                     <button key={r} type="button" onClick={() => setRequest({ ...request, region: r })}
-                      className={`p-7 rounded-4xl border-2 text-left transition-all ${request.region === r ? 'border-lazy-900 bg-lazy-900 text-white shadow-2xl ring-4 ring-lazy-100' : 'border-slate-50 bg-white text-slate-500 hover:border-slate-200'}`}>
+                      className={`p-7 rounded-4xl border-2 text-left transition-all ${request.region === r ? 'border-lazy-900 bg-lazy-900 text-white shadow-2xl ring-4 ring-slate-100' : 'border-slate-50 bg-white text-slate-500 hover:border-slate-200'}`}>
                       <span className="font-black text-base tracking-tight">{r}</span>
                     </button>
                   ))}
@@ -260,13 +286,13 @@ const App: React.FC = () => {
               {/* 설정 섹션 */}
               <section className="space-y-8">
                 <div className="flex items-center gap-4 px-2">
-                  <div className="w-10 h-10 rounded-2xl bg-lazy-500/10 flex items-center justify-center text-lazy-500">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-lazy-500">
                     <span className="material-symbols-rounded">tune</span>
                   </div>
                   <h3 className="text-xl font-black text-slate-800">나머지 취향 존중</h3>
                 </div>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-4 gap-2 bg-slate-100/50 p-2 rounded-3xl">
+                  <div className="grid grid-cols-4 gap-2 bg-slate-100 p-2 rounded-3xl">
                     {Object.values(Budget).map((b) => (
                       <button key={b} type="button" onClick={() => setRequest({ ...request, budget: b })}
                         className={`py-4 rounded-2xl font-black text-xs transition-all ${request.budget === b ? 'bg-white text-lazy-900 shadow-sm' : 'text-slate-400'}`}>
@@ -276,9 +302,9 @@ const App: React.FC = () => {
                   </div>
                   
                   <button type="button" onClick={() => setRequest({ ...request, includeFood: !request.includeFood })}
-                    className={`w-full flex items-center justify-between p-8 rounded-5xl border-2 transition-all ${request.includeFood ? 'border-lazy-500 bg-lazy-50 text-lazy-500 shadow-sm' : 'border-slate-100 bg-white text-slate-400'}`}>
+                    className={`w-full flex items-center justify-between p-8 rounded-5xl border-2 transition-all ${request.includeFood ? 'border-lazy-500 bg-slate-50 text-lazy-500 shadow-sm' : 'border-slate-100 bg-white text-slate-400'}`}>
                     <div className="flex items-center gap-5">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${request.includeFood ? 'bg-lazy-500 text-white' : 'bg-slate-50 text-slate-300'}`}>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${request.includeFood ? 'bg-lazy-500 text-white' : 'bg-slate-100 text-slate-300'}`}>
                         <span className="material-symbols-rounded text-2xl">restaurant</span>
                       </div>
                       <span className="font-black text-base">유명 맛집 무조건 포함</span>
@@ -291,7 +317,7 @@ const App: React.FC = () => {
                   <div className="grid gap-4">
                     {Object.values(TravelStyle).map((s) => (
                       <button key={s} type="button" onClick={() => setRequest({ ...request, style: s })}
-                        className={`w-full p-7 rounded-4xl text-left flex justify-between items-center border-2 transition-all ${request.style === s ? 'border-lazy-500 bg-lazy-50 text-lazy-500 shadow-lg' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}>
+                        className={`w-full p-7 rounded-4xl text-left flex justify-between items-center border-2 transition-all ${request.style === s ? 'border-lazy-500 bg-slate-50 text-lazy-500 shadow-lg' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}>
                         <span className="font-black text-base">{s}</span>
                         {request.style === s && <span className="material-symbols-rounded text-2xl animate-pulse">verified</span>}
                       </button>
@@ -301,7 +327,7 @@ const App: React.FC = () => {
               </section>
 
               <button type="button" onClick={requestLocation} disabled={isLoadingLocation}
-                className={`w-full p-8 rounded-5xl border-2 border-dashed flex items-center justify-center gap-4 font-black text-base transition-all ${request.location ? 'border-lazy-500 text-lazy-500 bg-lazy-50' : 'border-slate-200 text-slate-400 hover:border-slate-400 hover:bg-slate-50'}`}>
+                className={`w-full p-8 rounded-5xl border-2 border-dashed flex items-center justify-center gap-4 font-black text-base transition-all ${request.location ? 'border-lazy-500 text-lazy-500 bg-slate-50' : 'border-slate-200 text-slate-400 hover:border-slate-400 hover:bg-slate-50'}`}>
                 <span className={`material-symbols-rounded text-3xl ${isLoadingLocation ? 'animate-spin' : ''}`}>{isLoadingLocation ? 'progress_activity' : 'near_me'}</span>
                 {request.location ? "현재 위치 기반 연산 활성화" : "내 주변 코스 찾기 (선택)"}
               </button>
@@ -316,7 +342,7 @@ const App: React.FC = () => {
         {step === 'loading' && (
           <div className="flex flex-col items-center justify-center py-48 space-y-16 fade-in-up">
             <div className="relative">
-              <div className="w-40 h-40 bg-lazy-500/10 rounded-full animate-ping absolute -inset-2"></div>
+              <div className="w-40 h-40 bg-slate-100 rounded-full animate-ping absolute -inset-2"></div>
               <div className="w-36 h-36 bg-lazy-500 rounded-5xl flex items-center justify-center text-white text-7xl shadow-2xl animate-bounce relative z-10">
                 <span className="material-symbols-rounded text-7xl">airline_seat_recline_extra</span>
               </div>
@@ -346,6 +372,7 @@ const App: React.FC = () => {
                 <div className="flex flex-wrap gap-3">
                   <span className="bg-white/10 text-white text-[11px] font-black px-5 py-2.5 rounded-full border border-white/20 backdrop-blur-md uppercase tracking-widest">{request.region}</span>
                   <span className="bg-white/10 text-white text-[11px] font-black px-5 py-2.5 rounded-full border border-white/20 backdrop-blur-md uppercase tracking-widest">{request.duration}</span>
+                  <span className="bg-lazy-500 text-white text-[11px] font-black px-5 py-2.5 rounded-full shadow-lg uppercase tracking-widest">Lv.{request.lazinessLevel}</span>
                 </div>
                 <h2 className="text-5xl sm:text-7xl font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl">{parsedData.title}</h2>
                 <div className="bg-white/10 border border-white/10 p-10 rounded-4xl flex items-start gap-6 backdrop-blur-2xl">
@@ -376,7 +403,7 @@ const App: React.FC = () => {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 mb-10">
                             <div className="space-y-3">
                               <div className="flex items-center gap-3">
-                                <span className="text-lazy-500 font-black text-[10px] uppercase tracking-widest bg-lazy-50 px-3 py-1 rounded-lg">STOP {idx + 1}</span>
+                                <span className="text-lazy-500 font-black text-[10px] uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg">STOP {idx + 1}</span>
                                 <div className="flex gap-1">
                                   {[...Array(5)].map((_, i) => (
                                     <span key={i} className={`material-symbols-rounded text-sm ${i < act.photo ? 'text-lazy-500' : 'text-slate-200'}`}>photo_camera</span>
@@ -386,7 +413,7 @@ const App: React.FC = () => {
                               <h4 className="text-4xl font-black text-lazy-900 leading-tight tracking-tight">{act.name}</h4>
                             </div>
                             {act.mapLink && (
-                              <a href={act.mapLink.uri} target="_blank" rel="noopener noreferrer" className="bg-lazy-50 text-lazy-500 px-8 py-5 rounded-3xl flex items-center justify-center gap-3 hover:bg-lazy-500 hover:text-white transition-all shadow-md group/link self-start">
+                              <a href={act.mapLink.uri} target="_blank" rel="noopener noreferrer" className="bg-slate-50 text-lazy-500 px-8 py-5 rounded-3xl flex items-center justify-center gap-3 hover:bg-lazy-500 hover:text-white transition-all shadow-md group/link self-start">
                                 <span className="font-black text-sm uppercase">Navigation</span>
                                 <span className="material-symbols-rounded text-2xl group-hover/link:translate-x-1 transition-transform">explore</span>
                               </a>
@@ -395,7 +422,7 @@ const App: React.FC = () => {
                           
                           <p className="text-slate-600 text-xl font-medium leading-relaxed mb-12">{act.desc}</p>
                           
-                          <div className="bg-slate-50/50 p-10 rounded-4xl flex gap-8 items-start border border-slate-100/50 group/tip">
+                          <div className="bg-slate-50 p-10 rounded-4xl flex gap-8 items-start border border-slate-100 group/tip">
                             <div className="w-16 h-16 rounded-3xl bg-white shadow-md flex items-center justify-center shrink-0 group-hover/tip:rotate-[15deg] transition-transform duration-500">
                               <span className="material-symbols-rounded text-lazy-500 text-3xl">lightbulb_circle</span>
                             </div>
@@ -450,7 +477,7 @@ const App: React.FC = () => {
                     className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-sm cursor-pointer hover:shadow-2xl hover:-translate-y-2 transition-all group relative">
                     <div className="space-y-8">
                       <div className="flex gap-4">
-                        <span className="bg-lazy-50 text-lazy-500 text-[10px] font-black px-5 py-2 rounded-full uppercase tracking-widest shadow-sm">{t.region}</span>
+                        <span className="bg-slate-50 text-lazy-500 text-[10px] font-black px-5 py-2 rounded-full uppercase tracking-widest shadow-sm">{t.region}</span>
                         <span className="bg-slate-50 text-slate-400 text-[10px] font-bold px-5 py-2 rounded-full border border-slate-100">{t.savedAt}</span>
                       </div>
                       <div className="space-y-3">

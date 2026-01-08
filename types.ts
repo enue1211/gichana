@@ -51,6 +51,7 @@ export interface TravelRequest {
   transport: TransportMode;
   participants: Participant;
   includeFood: boolean;
+  lazinessLevel: number; // 1-5 (5 is most lazy)
   location?: {
     latitude: number;
     longitude: number;
