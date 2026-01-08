@@ -2,7 +2,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { TravelRequest, TravelResultContent, TransportMode, Region } from "../types";
 
-export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResultContent> => {
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const generateTravelPlan = async (req: TravelRequest, retryCount = 0): Promise<TravelResultContent> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const isPublic = req.transport === TransportMode.PUBLIC;
@@ -78,7 +80,14 @@ export const generateTravelPlan = async (req: TravelRequest): Promise<TravelResu
 
     return { text, links };
   } catch (error: any) {
+    // 503 에러 발생 시 재시도 (최대 2번)
+    if (error.message?.includes('503') && retryCount < 2) {
+      await sleep(2000 * (retryCount + 1));
+      return generateTravelPlan(req, retryCount + 1);
+    }
     console.error("Gemini Error:", error);
-    throw new Error("AI 호출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    throw new Error(error.message?.includes('503') 
+      ? "서버 부하가 심합니다. 잠시 후 다시 '최소 동선 계산하기'를 눌러주세요." 
+      : "AI 호출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
   }
 };
