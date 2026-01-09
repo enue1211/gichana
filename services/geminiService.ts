@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { TravelRequest, TravelResultContent, TransportMode, Region } from "../types";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -30,14 +30,15 @@ export const generateTravelPlan = async (req: TravelRequest, retryCount = 0): Pr
     
     응답 형식:
     [TITLE] 여행 제목
-    [STARS] 1~5 (게으른 사람에게 추천하는 정도, 높을수록 덜 움직임)
+    [STARS] 1~5 (게으른 사람에게 추천하는 정도)
     [STEPS] 예상 도보 수 (숫자만, 예: 3500)
     [MOVEMENTS] 총 이동 횟수 (숫자만, 예: 2)
-    [INDOOR] 실내 비중 (퍼센트 숫자만, 예: 75)
+    [INDOOR] 실내 비중 (숫자만, 예: 75)
     [COMMENT] 냉소적인 총평
     
     [DAY 1]
-    [PLACE] 장소명 (지도 검색이 가능한 정확한 명칭)
+    [PLACE] 장소명
+    [LATLNG] 위도, 경도 (예: 37.5665, 126.9780)
     [DESC] 귀차니스트에게 좋은 이유
     [TIP] 최소 동선 꿀팁
     ...
@@ -46,7 +47,7 @@ export const generateTravelPlan = async (req: TravelRequest, retryCount = 0): Pr
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `${req.region} 지역의 최단 거리 여행 코스를 [TAG] 형식으로 짜줘. 모든 [PLACE]는 구글 맵 기반으로 검색해주고, 내부 코드나 함수 호출은 절대 텍스트에 포함하지 마.`,
+      contents: `${req.region} 지역의 최단 거리 여행 코스를 [TAG] 형식으로 짜줘. 모든 [PLACE]에 대해 정확한 [LATLNG]를 포함해줘.`,
       config: {
         systemInstruction,
         tools: [{ googleMaps: {} }],
@@ -90,5 +91,37 @@ export const generateTravelPlan = async (req: TravelRequest, retryCount = 0): Pr
       return generateTravelPlan(req, retryCount + 1);
     }
     throw new Error(error?.message || "AI 호출 중 오류가 발생했습니다.");
+  }
+};
+
+export const getNearbyRecommendations = async (lat: string, lng: string): Promise<any[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `위도 ${lat}, 경도 ${lng} 주변 500m 이내의 '귀차니스트'가 좋아할 만한 장소 5곳을 추천해줘. 이동 거리가 최소화되어야 함.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            lat: { type: Type.STRING },
+            lng: { type: Type.STRING },
+            desc: { type: Type.STRING },
+            tip: { type: Type.STRING }
+          },
+          required: ["name", "lat", "lng", "desc", "tip"]
+        }
+      }
+    }
+  });
+  
+  try {
+    return JSON.parse(response.text || "[]");
+  } catch (e) {
+    return [];
   }
 };
