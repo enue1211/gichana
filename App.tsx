@@ -3,13 +3,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Region, TravelStyle, TravelRequest, SavedTravel, GroundingLink, TransportMode, Duration, Budget, Participant } from './types';
 import { generateTravelPlan } from './services/geminiService';
 
+const lazyLevelMap = ["살짝 귀찮음", "많이 귀찮음", "움직이면 사망", "침대와 합체", "영혼만 여행"];
+
 const parseResult = (text: string, links: GroundingLink[]) => {
-  const title = text.match(/\[TITLE\]\s*(.*)/)?.[1] || "무제의 여정";
-  const difficulty = parseInt(text.match(/\[DIFFICULTY\]\s*(\d+)/)?.[1] || "90");
-  const comment = text.match(/\[COMMENT\]\s*(.*)/)?.[1] || "귀찮지만 이 정도면 갈 만 합니다.";
+  const cleanText = text.replace(/google_maps\(.*?\)/g, '').replace(/```.*?```/g, '');
+  
+  const title = cleanText.match(/\[TITLE\]\s*(.*)/)?.[1] || "무제의 여정";
+  const stars = parseInt(cleanText.match(/\[STARS\]\s*(\d+)/)?.[1] || "5");
+  const steps = cleanText.match(/\[STEPS\]\s*(\d+)/)?.[1] || "4000";
+  const movements = cleanText.match(/\[MOVEMENTS\]\s*(\d+)/)?.[1] || "3";
+  const indoor = cleanText.match(/\[INDOOR\]\s*(\d+)/)?.[1] || "70";
+  const comment = cleanText.match(/\[COMMENT\]\s*(.*)/)?.[1] || "귀찮지만 이 정도면 갈 만 합니다.";
 
   const days: any[] = [];
-  const dayBlocks = text.split(/\[DAY\s*(\d+)\]/);
+  const dayBlocks = cleanText.split(/\[DAY\s*(\d+)\]/);
   
   for (let i = 1; i < dayBlocks.length; i += 2) {
     const dayNum = dayBlocks[i];
@@ -22,30 +29,31 @@ const parseResult = (text: string, links: GroundingLink[]) => {
       const trimmedBlock = block.trim();
       if (!trimmedBlock) return;
 
-      // 이름 추출 및 정제
       const lines = trimmedBlock.split('\n');
       const name = lines[0].replace(/\[.*\]/g, '').trim();
       
-      // 이름이 없거나 너무 짧으면 스킵 (빈 카드 방지)
       if (!name || name.length < 2) return;
 
       const desc = block.match(/\[DESC\]\s*([\s\S]*?)(?=\[|$)/)?.[1]?.trim() || "";
       const tip = block.match(/\[TIP\]\s*([\s\S]*?)(?=\[|$)/)?.[1]?.trim() || "";
-      const photo = parseInt(block.match(/\[PHOTO\]\s*(\d+)/)?.[1] || "3");
       
-      const mapLink = links.find(l => name.includes(l.title) || l.title.includes(name));
-      activities.push({ name, desc, tip, photo, mapLink });
+      const mapLink = links.find(l => 
+        name.toLowerCase().includes(l.title.toLowerCase()) || 
+        l.title.toLowerCase().includes(name.toLowerCase())
+      );
+      activities.push({ name, desc, tip, mapLink });
     });
 
     if (activities.length > 0) {
       days.push({ day: dayNum, activities });
     }
   }
-  return { title, difficulty, comment, days };
+  return { title, stars, steps, movements, indoor, comment, days };
 };
 
 const App: React.FC = () => {
   const [step, setStep] = useState<'home' | 'form' | 'loading' | 'result' | 'mypage'>('home');
+  const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number } | undefined>();
   const [request, setRequest] = useState<TravelRequest>({
     region: Region.SEOUL,
     duration: Duration.DAY_TRIP,
@@ -65,6 +73,13 @@ const App: React.FC = () => {
   useEffect(() => {
     const data = localStorage.getItem('lazy_wander_v1');
     if (data) setSavedTravels(JSON.parse(data));
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+        (err) => console.log("Geolocation permission denied", err)
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -74,12 +89,12 @@ const App: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStep('loading');
-    const loadingTexts = ["최단 동선 계산 중...", "침대 반경 1km 탐색 중...", "사람 적은 곳 선별 중..."];
+    const loadingTexts = ["구글 맵 데이터 분석 중...", "최단 동선 계산 중...", "사람 적은 곳 선별 중..."];
     let i = 0;
     const interval = setInterval(() => setLoadingMsg(loadingTexts[++i % loadingTexts.length]), 2500);
     
     try {
-      const result = await generateTravelPlan(request);
+      const result = await generateTravelPlan({ ...request, location: userLocation });
       setRawResult(result);
       setStep('result');
       window.scrollTo(0, 0);
@@ -105,7 +120,7 @@ const App: React.FC = () => {
       links: rawResult.links,
       savedAt: new Date().toLocaleDateString(),
       region: request.region,
-      totalDifficulty: parsedData.difficulty
+      totalDifficulty: 90
     };
     setSavedTravels([newSave, ...savedTravels]);
     alert("보관함에 저장되었습니다.");
@@ -218,15 +233,17 @@ const App: React.FC = () => {
             </section>
 
             <section className="space-y-6">
-              <SectionTitle num="6" text="당신의 게으름 성향" />
+              <SectionTitle num="6" text="귀찮행 여행 스타일" />
               <div className="p-8 bg-slate-50 rounded-5xl border border-slate-100 space-y-8">
                 <div className="space-y-4">
-                  <div className="flex justify-between font-black text-sm text-slate-600">
-                    <span>이동 강도</span>
-                    <span className="text-brand-500">Lv.{request.lazinessLevel}</span>
+                  <div className="flex justify-between items-start font-black text-sm text-slate-600">
+                    <span>귀찮음 정도</span>
+                    <div className="text-right">
+                      <span className="text-brand-500 text-lg">Lv.{request.lazinessLevel}</span>
+                      <p className="text-[11px] font-bold text-brand-500/80 mt-0.5">{lazyLevelMap[request.lazinessLevel - 1]}</p>
+                    </div>
                   </div>
                   <input type="range" min="1" max="5" step="1" value={request.lazinessLevel} onChange={(e)=>setRequest({...request, lazinessLevel:parseInt(e.target.value)})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-500" />
-                  <div className="flex justify-between text-[10px] font-bold text-slate-400"><span>움직일만 함</span><span>영혼 가출</span></div>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {Object.values(TravelStyle).map(s => (
@@ -255,40 +272,87 @@ const App: React.FC = () => {
 
         {step === 'result' && parsedData && (
           <div className="fade-in-up space-y-12 pb-20">
-            <div className="bg-brand-900 rounded-[3rem] p-8 sm:p-12 text-white space-y-6 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-8 right-8 bg-brand-500 px-4 py-2 rounded-2xl font-black text-xs">LV.{request.lazinessLevel}</div>
-              <h2 className="text-4xl font-black leading-tight pr-12">{parsedData.title}</h2>
-              <div className="p-6 bg-white/10 rounded-3xl border border-white/10 backdrop-blur-md">
-                <p className="italic font-medium text-lg opacity-90">"{parsedData.comment}"</p>
+            {/* Main Title Banner */}
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
+                 <span className="material-symbols-rounded text-slate-500">search</span>
+              </div>
+              <h2 className="text-2xl font-black text-brand-900 tracking-tight">귀찮음을 해결해줄 코스</h2>
+            </div>
+
+            {/* Travel Summary Card (The Request Update) */}
+            <div className="lazy-card p-10 space-y-10">
+              <div className="flex justify-between items-start">
+                <h2 className="text-3xl font-black leading-tight text-brand-900 max-w-[70%]">{parsedData.title}</h2>
+                <div className="flex gap-0.5 text-brand-500">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className="material-symbols-rounded text-xl" style={{ fontVariationSettings: `'FILL' ${i < parsedData.stars ? 1 : 0}` }}>
+                      star
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-slate-500 font-medium leading-relaxed">
+                {parsedData.comment}
+              </p>
+
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-50">
+                <div className="text-center space-y-2">
+                  <div className="flex justify-center">
+                    <span className="material-symbols-rounded text-brand-500 text-3xl">footprint</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400">예상 걸음</p>
+                  <p className="text-lg font-black text-brand-900">{Number(parsedData.steps).toLocaleString()}보</p>
+                </div>
+                <div className="text-center space-y-2 border-x border-slate-100">
+                  <div className="flex justify-center">
+                    <span className="material-symbols-rounded text-brand-500 text-3xl">near_me</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400">이동 횟수</p>
+                  <p className="text-lg font-black text-brand-900">{parsedData.movements}회</p>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="flex justify-center">
+                    <span className="material-symbols-rounded text-brand-500 text-3xl">window</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400">실내 비중</p>
+                  <p className="text-lg font-black text-brand-900">{parsedData.indoor}%</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                {parsedData.days[0].activities.slice(0, 3).map((act: any, i: number) => (
+                  <span key={i} className="px-4 py-2 bg-slate-50 text-slate-500 rounded-full text-[11px] font-bold border border-slate-100">
+                    {act.name}
+                  </span>
+                ))}
               </div>
             </div>
 
             <div className="space-y-12">
               {parsedData.days.map((day: any) => (
                 <div key={day.day} className="space-y-6">
-                  <h3 className="text-2xl font-black text-brand-900 px-2">Day {day.day}</h3>
+                  <h3 className="text-2xl font-black text-brand-900 px-2 flex items-center gap-2">
+                    <span className="material-symbols-rounded">calendar_today</span> Day {day.day}
+                  </h3>
                   <div className="grid gap-6">
                     {day.activities.map((act: any, idx: number) => (
-                      <div key={idx} className="lazy-card p-8 space-y-4">
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-xl font-black">{act.name}</h4>
-                          <div className="flex gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <span key={i} className={`material-symbols-rounded text-xs ${i < act.photo ? 'text-brand-500' : 'text-slate-100'}`}>photo_camera</span>
-                            ))}
-                          </div>
+                      <div key={idx} className="lazy-card p-8 space-y-6">
+                        <div className="flex justify-between items-start gap-4">
+                          <h4 className="text-2xl font-black leading-tight">{act.name}</h4>
+                          {act.mapLink && (
+                            <a href={act.mapLink.uri} target="_blank" className="shrink-0 bg-brand-50 text-brand-500 px-4 py-2 rounded-2xl font-black text-xs flex items-center gap-2 hover:bg-brand-500 hover:text-white transition-all">
+                              <span className="material-symbols-rounded text-sm">location_on</span> 핀
+                            </a>
+                          )}
                         </div>
-                        <p className="text-slate-500 text-sm font-medium leading-relaxed">{act.desc}</p>
+                        <p className="text-slate-600 text-base font-medium leading-relaxed">{act.desc}</p>
                         {act.tip && (
-                          <div className="bg-slate-50 p-4 rounded-2xl flex gap-3 items-start">
-                            <span className="material-symbols-rounded text-brand-500 text-sm">tips_and_updates</span>
-                            <p className="text-xs font-bold text-slate-700">{act.tip}</p>
+                          <div className="bg-slate-50 p-5 rounded-3xl flex gap-3 items-start border border-slate-100">
+                            <span className="material-symbols-rounded text-brand-500 text-lg">lightbulb</span>
+                            <p className="text-sm font-bold text-slate-700 leading-snug">{act.tip}</p>
                           </div>
-                        )}
-                        {act.mapLink && (
-                          <a href={act.mapLink.uri} target="_blank" className="inline-flex items-center gap-2 text-brand-500 font-black text-xs">
-                            구글 맵에서 위치 확인 <span className="material-symbols-rounded text-xs">open_in_new</span>
-                          </a>
                         )}
                       </div>
                     ))}
@@ -322,20 +386,18 @@ const App: React.FC = () => {
             ) : (
               <div className="grid gap-4">
                 {savedTravels.map(t => (
-                  <div key={t.id} onClick={() => { setRawResult({ text: t.content, links: t.links }); setStep('result'); window.scrollTo(0, 0); }} className="lazy-card p-6 cursor-pointer group relative overflow-hidden">
-                    <div className="flex justify-between items-start pr-10">
-                      <div className="space-y-2">
-                        <span className="bg-brand-100 text-brand-500 px-3 py-1 rounded-lg text-[10px] font-black">{t.region}</span>
-                        <h3 className="text-xl font-black group-hover:text-brand-500 transition-colors pr-4">{t.title}</h3>
-                        <p className="text-slate-400 text-xs">{t.savedAt}</p>
-                      </div>
-                      <span className="material-symbols-rounded text-slate-200 self-center">chevron_right</span>
+                  <div key={t.id} onClick={() => { setRawResult({ text: t.content, links: t.links }); setStep('result'); window.scrollTo(0, 0); }} className="lazy-card p-6 cursor-pointer group relative overflow-hidden flex items-center gap-4">
+                    <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500 shrink-0">
+                      <span className="material-symbols-rounded">map</span>
                     </div>
-                    <button 
-                      onClick={(e) => deletePlan(t.id, e)}
-                      className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-50 text-slate-300 hover:bg-red-50 hover:text-red-400 flex items-center justify-center transition-all z-10"
-                      title="삭제"
-                    >
+                    <div className="flex-1 min-w-0 pr-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-brand-100 text-brand-500 px-2 py-0.5 rounded text-[9px] font-black">{t.region.split(' ')[0]}</span>
+                        <span className="text-slate-400 text-[10px]">{t.savedAt}</span>
+                      </div>
+                      <h3 className="text-lg font-black group-hover:text-brand-500 transition-colors truncate">{t.title}</h3>
+                    </div>
+                    <button onClick={(e) => deletePlan(t.id, e)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-400">
                       <span className="material-symbols-rounded text-lg">delete</span>
                     </button>
                   </div>

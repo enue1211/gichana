@@ -1,9 +1,9 @@
 
 export enum TravelStyle {
-  HERMIT = '집돌이/집순이 (이동 극혐)',
-  EFFICIENCY = '가성비 효율충 (최단 코스)',
-  STATUS = 'SNS 과시용 (찍고 바로 튀기)',
-  RICH_LAZY = '돈으로 해결하는 게으름 (발렛 필수)'
+  HERMIT = '집돌이/집순이 (숙소 중심)',
+  EFFICIENCY = '가성비 여행 (체험 중심)',
+  STATUS = 'SNS 과시용 (감성 중심)',
+  WELLNESS = '웰니스 여행 (치유 중심)'
 }
 
 export enum Region {
