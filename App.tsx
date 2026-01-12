@@ -268,7 +268,7 @@ const App: React.FC = () => {
           <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white">
             <span className="material-symbols-rounded">king_bed</span>
           </div>
-          <span className="font-black text-lg tracking-tighter text-brand-900">귀차니스트의 방랑</span>
+          <span className="font-black text-lg tracking-tighter text-brand-900">귀찮행</span>
         </div>
         <button onClick={() => setStep('mypage')} className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors">
           <span className="material-symbols-rounded">folder_special</span>
@@ -278,14 +278,14 @@ const App: React.FC = () => {
       <main className="flex-1 pt-28 pb-10 px-6 max-w-2xl mx-auto w-full">
         {step === 'home' && (
           <div className="fade-in-up space-y-10 py-10 text-center">
-            <div className="relative rounded-[3rem] overflow-hidden aspect-video shadow-2xl bg-brand-900 group">
+            <div className="relative rounded-[3rem] overflow-hidden aspect-video shadow-2xl bg-white group">
               <img src="https://images.unsplash.com/photo-1542128962-9d50ad7bf714?q=80&w=2070&auto=format&fit=crop" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 flex flex-col justify-center items-center p-8 text-white">
-                <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">가기 싫은 당신을 위한<br/>진짜 여행 설계</h1>
-                <p className="text-slate-200 font-medium">가장 적게 걷고, 가장 많이 쉬는 법</p>
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-8 text-[#00A980] bg-white/70">
+                <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">귀찮은 당신을 위한<br/>진짜 여행 설계</h1>
+                <p className="text-lg text-gray-700 font medium">가장 적게 걷고, 가장 많이 쉬는 법</p>
               </div>
             </div>
-            <button onClick={() => setStep('form')} className="w-full py-8 bg-brand-900 text-white rounded-[2.5rem] font-black text-xl shadow-xl hover:bg-brand-800 transition-all">
+            <button onClick={() => setStep('form')} className="w-full py-8 bg-[#00A980]/90 text-white rounded-[2.5rem] font-bold text-xl shadow-md hover:bg-[#00A980] transition-all">
               여정 설계 시작하기
             </button>
           </div>
@@ -295,10 +295,12 @@ const App: React.FC = () => {
           <form onSubmit={handleSubmit} className="fade-in-up space-y-12 pb-20">
             {/* Form sections (omitted for brevity but kept in actual implementation) */}
             <section><SectionTitle num="1" text="일정 & 이동" />
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-3 gap-3 mb-3">
                 {Object.values(Duration).map(d => (
                   <button key={d} type="button" onClick={()=>setRequest({...request, duration:d})} className={`p-4 rounded-3xl border-2 text-sm font-bold transition-all ${request.duration === d ? 'border-brand-500 bg-brand-500 text-white shadow-lg shadow-brand-100' : 'border-slate-100 bg-white text-slate-400 hover:border-brand-200'}`}>{d}</button>
                 ))}
+              </div>
+              <div className="border-t border-[#00A980]/20 my-4">
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {Object.values(TransportMode).map(m => (
@@ -377,7 +379,7 @@ const App: React.FC = () => {
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
                    <span className="material-symbols-rounded text-slate-500">edit_note</span>
                 </div>
-                <h2 className="text-2xl font-black text-brand-900 tracking-tight">여정 편집 모드</h2>
+                <h2 className="text-2xl font-black text-brand-900 tracking-tight">여정 한방에 끝내기</h2>
               </div>
             </div>
 
@@ -516,9 +518,14 @@ const App: React.FC = () => {
               ))}
             </div>
 
+            <div className="pt-10 relative">  {/* 공유하기 아이콘 버튼 */}
+              <button onClick={handleCopyUrl} className="absolute -top-4 right-2 w-12 h-12 rounded-full bg-white text-[#00A980] border border-[#00A980]/30 shadow-md hover:bg-[#00A980]/10 transition-all flex items-center justify-center"
+              aria-label="공유하기">
+              type="button">
+              <span className="material-symbols-rounded text-xl">share</span> </button>
             <div className="pt-10 grid grid-cols-2 gap-4">
-              <button onClick={savePlan} className="py-6 bg-brand-500 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 shadow-xl shadow-brand-100 hover:bg-brand-600 transition-colors">저장하기</button>
-              <button onClick={() => setStep('form')} className="py-6 bg-brand-900 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 hover:bg-black transition-colors">새 여정 설계</button>
+              <button onClick={savePlan} className="py-6 bg-brand-500 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 shadow-xl shadow-brand-100 hover:bg-brand-600 transition-colors "type="button">저장하기</button>
+              <button onClick={() => setStep('form')} className="py-6 bg-brand-900 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 hover:bg-black transition-colors" type="button"> 새 여정 설계</button>
             </div>
           </div>
         )}
