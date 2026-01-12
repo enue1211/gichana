@@ -40,6 +40,7 @@ const App: React.FC = () => {
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
+        // Fixed TypeScript errors: removed invalid 'number =' type-as-value usage in object initialization
         (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
         (err) => console.log("Geolocation permission denied", err)
       );
@@ -275,8 +276,9 @@ const App: React.FC = () => {
             <div className="relative rounded-[3rem] overflow-hidden aspect-video shadow-2xl bg-white group">
               <img src="https://images.unsplash.com/photo-1542128962-9d50ad7bf714?q=80&w=2070&auto=format&fit=crop" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 flex flex-col justify-center items-center p-8 text-[#00A980] bg-white/70">
+                <img src="/logo.png" alt="Logo" className="h-16 sm:h-20 w-auto mb-6 object-contain" />
                 <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">귀찮은 당신을 위한<br/>진짜 여행 설계</h1>
-                <p className="text-lg text-gray-700 font medium">가장 적게 걷고, 가장 많이 쉬는 법</p>
+                <p className="text-lg text-gray-700 font-medium">가장 적게 걷고, 가장 많이 쉬는 법</p>
               </div>
             </div>
             <button onClick={() => setStep('form')} className="w-full py-8 bg-[#00A980]/90 text-white rounded-[2.5rem] font-bold text-xl shadow-md hover:bg-[#00A980] transition-all">
