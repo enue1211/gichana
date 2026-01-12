@@ -293,8 +293,8 @@ const App: React.FC = () => {
               <div className="absolute inset-0 flex flex-col justify-center items-center p-8 text-center bg-white/70">
                 <Logo className="h-10 w-auto mb-6" />
 
-                <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4">귀찮은 당신을 위한<br />진짜 여행 설계</h1>
-                <p className="text-lg text-gray-700 font-medium">가장 적게 걷고, 가장 많이 쉬는 법</p>
+                <h1 className="text-4xl sm:text-5xl font-black leading-tight mb-4 break-keep whitespace-normal">귀찮은 당신을 위한<br />진짜 여행 설계</h1>
+                <p className="text-lg text-gray-700 font-medium break-keep whitespace-normal">가장 적게 걷고, 가장 많이 쉬는 법</p>
               </div>
             </div>
             <button onClick={() => setStep('form')} className="w-full py-8 bg-[#00A980]/90 text-white rounded-[2.5rem] font-bold text-xl shadow-md hover:bg-[#00A980] transition-all">
@@ -379,7 +379,7 @@ const App: React.FC = () => {
             <div className="w-32 h-32 bg-brand-100 rounded-5xl flex items-center justify-center animate-bounce shadow-2xl">
               <span className="material-symbols-rounded text-6xl text-brand-500">airline_seat_recline_extra</span>
             </div>
-            <h2 className="text-2xl font-black text-center px-10">{loadingMsg}</h2>
+            <h2 className="text-2xl font-black text-center px-10 break-keep whitespace-normal">{loadingMsg}</h2>
           </div>
         )}
 
@@ -394,10 +394,10 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="lazy-card p-10 space-y-10">
-              <div className="flex justify-between items-start">
-                <h2 className="text-3xl font-black leading-tight text-brand-900 max-w-[75%]">{itinerary.title}</h2>
-                <div className="flex gap-0.5 text-brand-500">
+            <div className="lazy-card p-8 sm:p-10 space-y-10 min-w-0 overflow-hidden">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 min-w-0">
+                <h2 className="text-2xl sm:text-3xl font-black leading-tight text-brand-900 break-keep whitespace-normal min-w-0 flex-1">{itinerary.title}</h2>
+                <div className="flex gap-0.5 text-brand-500 shrink-0">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <span key={i} className="material-symbols-rounded text-2xl" style={{ fontVariationSettings: `'FILL' ${i < itinerary.stars ? 1 : 0}` }}>star</span>
                   ))}
@@ -405,7 +405,7 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-6">
-                <p className="text-slate-500 font-medium leading-relaxed">
+                <p className="text-slate-500 font-medium leading-relaxed break-keep whitespace-normal min-w-0">
                   {itinerary.comment}
                 </p>
 
@@ -443,7 +443,7 @@ const App: React.FC = () => {
 
                 <div className="flex flex-wrap gap-2 mt-4 pt-4">
                   {itinerary.days.flatMap((d: any) => d.activities).slice(0, 4).map((act: any, idx: number) => (
-                    <span key={act.id || idx} className="bg-slate-50 text-slate-500 px-4 py-2 rounded-full text-xs font-bold border border-slate-100">
+                    <span key={act.id || idx} className="bg-slate-50 text-slate-500 px-4 py-2 rounded-full text-xs font-bold border border-slate-100 break-keep">
                       {act.name}
                     </span>
                   ))}
@@ -461,14 +461,14 @@ const App: React.FC = () => {
                     {day.activities.map((act: any, aIdx: number) => (
                       <React.Fragment key={act.id}>
                         <div
-                          className={`lazy-card p-8 space-y-4 relative group transition-all ${draggedItem?.activityIdx === aIdx && draggedItem?.dayIdx === dIdx ? 'opacity-20 scale-95 ring-4 ring-brand-500/20' : 'opacity-100'} ${dragOverItem?.activityIdx === aIdx && dragOverItem?.dayIdx === dIdx ? 'border-brand-500 border-2' : 'border-slate-100'}`}
+                          className={`lazy-card p-6 sm:p-8 space-y-4 relative group transition-all min-w-0 overflow-hidden ${draggedItem?.activityIdx === aIdx && draggedItem?.dayIdx === dIdx ? 'opacity-20 scale-95 ring-4 ring-brand-500/20' : 'opacity-100'} ${dragOverItem?.activityIdx === aIdx && dragOverItem?.dayIdx === dIdx ? 'border-brand-500 border-2' : 'border-slate-100'}`}
                           draggable
                           onDragStart={() => handleDragStart(dIdx, aIdx)}
                           onDragEnter={() => handleDragEnter(dIdx, aIdx)}
                           onDragOver={(e) => e.preventDefault()}
                           onDrop={() => handleDrop(dIdx, aIdx)}
                         >
-                          <div className="absolute top-4 right-4 flex gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute top-4 right-4 flex flex-col gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20 items-end">
                             <button
                               type="button"
                               onClick={() => handleMoveActivity(dIdx, aIdx, aIdx - 1)}
@@ -495,23 +495,32 @@ const App: React.FC = () => {
                             >
                               <span className="material-symbols-rounded text-white">delete</span>
                             </button>
-                          </div>
-
-                          <div className="flex justify-between items-start gap-4 pr-32">
-                            <h4 className="text-2xl font-black leading-tight text-brand-900">{act.name}</h4>
-                            {act.mapLink && (
-                              <a href={act.mapLink.uri} target="_blank" rel="noreferrer" className="shrink-0 bg-brand-50 text-brand-500 px-4 py-2 rounded-2xl font-black text-xs flex items-center gap-2 hover:bg-brand-100 transition-colors">
-                                <span className="material-symbols-rounded text-sm">location_on</span> 구글맵
+                            {(act.mapLink || (act.lat && act.lng)) && (
+                              <a 
+                                href={act.mapLink?.uri || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(act.name)}+${act.lat},${act.lng}`} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="w-10 h-10 rounded-full bg-brand-50 text-brand-500 shadow-md border border-brand-100 flex items-center justify-center hover:bg-brand-100 transition-all transform hover:scale-110"
+                                title="구글맵에서 보기"
+                              >
+                                <span className="material-symbols-rounded">map</span>
                               </a>
                             )}
                           </div>
 
-                          <p className="text-slate-600 font-medium leading-relaxed">{act.desc}</p>
-                          {act.tip && (
-                            <div className="bg-slate-50 p-4 rounded-2xl text-xs font-bold text-slate-400 flex items-center gap-2">
-                              <span className="material-symbols-rounded text-sm">lightbulb</span> {act.tip}
+                          <div className="flex flex-col gap-4 pr-0 sm:pr-12 min-w-0">
+                            <div className="flex flex-wrap items-start justify-between gap-3 min-w-0 pr-12">
+                              <h4 className="text-xl sm:text-2xl font-black leading-tight text-brand-900 break-keep whitespace-normal min-w-0 flex-1">{act.name}</h4>
                             </div>
-                          )}
+
+                            <p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed break-keep whitespace-normal min-w-0 pr-12 sm:pr-0">{act.desc}</p>
+                            {act.tip && (
+                              <div className="bg-slate-50 p-4 rounded-2xl text-[10px] sm:text-xs font-bold text-slate-400 flex items-center gap-2 min-w-0 pr-12 sm:pr-0">
+                                <span className="material-symbols-rounded text-sm shrink-0">lightbulb</span> 
+                                <span className="break-keep whitespace-normal min-w-0">{act.tip}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex justify-center -my-4 relative z-10">
@@ -554,11 +563,11 @@ const App: React.FC = () => {
           <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
             <div className="bg-white w-full max-w-xl rounded-[3rem] shadow-2xl overflow-hidden fade-in-up">
               <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <div className="space-y-1">
-                  <h3 className="font-black text-2xl text-brand-900">주변 추천 장소</h3>
-                  <p className="text-xs font-bold text-slate-400">귀차니스트를 위한 최단 거리 스팟</p>
+                <div className="space-y-1 min-w-0">
+                  <h3 className="font-black text-2xl text-brand-900 break-keep">주변 추천 장소</h3>
+                  <p className="text-xs font-bold text-slate-400 break-keep">귀차니스트를 위한 최단 거리 스팟</p>
                 </div>
-                <button onClick={() => setIsPickingPlace(false)} className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors">
+                <button onClick={() => setIsPickingPlace(false)} className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors shrink-0">
                   <span className="material-symbols-rounded text-2xl text-slate-400">close</span>
                 </button>
               </div>
@@ -573,15 +582,16 @@ const App: React.FC = () => {
                     <div
                       key={i}
                       onClick={() => handleAddPlace(rec)}
-                      className="p-6 border-2 border-slate-50 rounded-[2rem] hover:border-brand-500 cursor-pointer group transition-all hover:bg-brand-50"
+                      className="p-6 border-2 border-slate-50 rounded-[2rem] hover:border-brand-500 cursor-pointer group transition-all hover:bg-brand-50 min-w-0 overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="font-black text-xl group-hover:text-brand-500 text-brand-900">{rec.name}</h4>
-                        <span className="material-symbols-rounded text-brand-500 opacity-0 group-hover:opacity-100 transform scale-125">add_circle</span>
+                      <div className="flex justify-between items-start mb-3 gap-2 min-w-0">
+                        <h4 className="font-black text-xl group-hover:text-brand-500 text-brand-900 break-keep flex-1">{rec.name}</h4>
+                        <span className="material-symbols-rounded text-brand-500 opacity-0 group-hover:opacity-100 transform scale-125 shrink-0">add_circle</span>
                       </div>
-                      <p className="text-sm text-slate-500 font-medium leading-relaxed mb-4">{rec.desc}</p>
-                      <div className="bg-white p-4 rounded-2xl text-[11px] font-bold text-slate-500 flex items-center gap-2 border border-slate-100 shadow-sm">
-                        <span className="material-symbols-rounded text-brand-500 text-sm">lightbulb</span> {rec.tip}
+                      <p className="text-sm text-slate-500 font-medium leading-relaxed mb-4 break-keep whitespace-normal min-w-0">{rec.desc}</p>
+                      <div className="bg-white p-4 rounded-2xl text-[11px] font-bold text-slate-500 flex items-center gap-2 border border-slate-100 shadow-sm min-w-0">
+                        <span className="material-symbols-rounded text-brand-500 text-sm shrink-0">lightbulb</span> 
+                        <span className="break-keep whitespace-normal min-w-0">{rec.tip}</span>
                       </div>
                     </div>
                   ))
@@ -608,7 +618,7 @@ const App: React.FC = () => {
             ) : (
               <div className="grid gap-4">
                 {savedTravels.map(t => (
-                  <div key={t.id} onClick={() => { setItinerary(JSON.parse(t.content)); setStep('result'); window.scrollTo(0, 0); }} className="lazy-card p-6 cursor-pointer group relative flex items-center gap-4">
+                  <div key={t.id} onClick={() => { setItinerary(JSON.parse(t.content)); setStep('result'); window.scrollTo(0, 0); }} className="lazy-card p-6 cursor-pointer group relative flex items-center gap-4 min-w-0 overflow-hidden">
                     <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-500 shrink-0">
                       <span className="material-symbols-rounded">map</span>
                     </div>
@@ -617,7 +627,7 @@ const App: React.FC = () => {
                         <span className="bg-brand-100 text-brand-500 px-2 py-0.5 rounded text-[9px] font-black">{t.region.split(' ')[0]}</span>
                         <span className="text-slate-400 text-[10px]">{t.savedAt}</span>
                       </div>
-                      <h3 className="text-lg font-black group-hover:text-brand-500 transition-colors truncate text-brand-900">{t.title}</h3>
+                      <h3 className="text-lg font-black group-hover:text-brand-500 transition-colors text-brand-900 break-keep whitespace-normal">{t.title}</h3>
                     </div>
                     <button onClick={(e) => deleteSavedPlan(t.id, e)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-400 transition-colors">
                       <span className="material-symbols-rounded text-lg">delete</span>
