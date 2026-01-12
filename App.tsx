@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [itinerary, setItinerary] = useState<any>(null);
   const [savedTravels, setSavedTravels] = useState<SavedTravel[]>([]);
   const [loadingMsg, setLoadingMsg] = useState("침대에서 일어나는 중...");
+  const [showToast, setShowToast] = useState(false);
 
   // Modal / Recommendation states
   const [isPickingPlace, setIsPickingPlace] = useState(false);
@@ -131,19 +132,12 @@ const App: React.FC = () => {
     };
   };
 
-  // 통계 재계산 함수
   const recalculateStats = (currentItinerary: any) => {
     const totalActivities = currentItinerary.days.reduce((acc: number, d: any) => acc + d.activities.length, 0);
     const initialCount = currentItinerary.initialActivityCount || totalActivities;
-    
-    // 이동 횟수는 장소 수에 비례 (장소 - 1 or 장소 수 그대로 사용)
     const newMovements = totalActivities;
-    
-    // 예상 걸음수는 장소 수에 비례하여 조정
     const stepPerPlace = currentItinerary.initialSteps / initialCount;
     const newSteps = Math.round(stepPerPlace * totalActivities);
-    
-    // 실내 비중은 크게 변하지 않으나 장소 수에 따라 미세 조정 (가정)
     const newIndoor = currentItinerary.initialIndoor;
 
     return {
@@ -192,11 +186,7 @@ const App: React.FC = () => {
     if (!confirm("이 여행지 카드를 여정에서 삭제하시겠습니까?\n삭제 시 예상 걸음수와 이동 횟수가 재계산됩니다.")) return;
     
     const newItinerary = { ...itinerary };
-    // 해당 날짜의 활동 배열에서 삭제
     newItinerary.days[dayIdx].activities.splice(activityIdx, 1);
-    
-    // 만약 해당 날짜에 활동이 하나도 남지 않는다면 (선택적: 날짜 유지 혹은 삭제)
-    // 여기서는 통계 재계산을 위해 itinerary 업데이트
     const updatedItinerary = recalculateStats(newItinerary);
     setItinerary(updatedItinerary);
   };
@@ -225,8 +215,6 @@ const App: React.FC = () => {
       mapLink: { title: place.name, uri: `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}` }
     };
     newItinerary.days[dayIdx].activities.splice(activityIdx + 1, 0, newActivity);
-    
-    // 추가 시에도 통계 재계산
     const updatedItinerary = recalculateStats(newItinerary);
     setItinerary(updatedItinerary);
     setIsPickingPlace(false);
@@ -254,6 +242,12 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
   const SectionTitle = ({ num, text }: { num: string, text: string }) => (
     <h3 className="text-xl font-black flex items-center gap-3 mb-4">
       <span className="w-7 h-7 bg-brand-900 text-white rounded-full flex items-center justify-center text-xs">{num}</span>
@@ -262,7 +256,7 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
       <nav className="glass fixed top-0 w-full z-50 h-20 flex items-center justify-between px-6 max-w-2xl mx-auto left-0 right-0">
         <div onClick={() => setStep('home')} className="flex items-center gap-2 cursor-pointer">
           <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white">
@@ -293,7 +287,6 @@ const App: React.FC = () => {
 
         {step === 'form' && (
           <form onSubmit={handleSubmit} className="fade-in-up space-y-12 pb-20">
-            {/* Form sections (omitted for brevity but kept in actual implementation) */}
             <section><SectionTitle num="1" text="일정 & 이동" />
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {Object.values(Duration).map(d => (
@@ -383,7 +376,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Travel Summary & Difficulty Card (Recalculated) */}
             <div className="lazy-card p-10 space-y-10">
               <div className="flex justify-between items-start">
                 <h2 className="text-3xl font-black leading-tight text-brand-900 max-w-[75%]">{itinerary.title}</h2>
@@ -458,9 +450,9 @@ const App: React.FC = () => {
                           onDragOver={(e) => e.preventDefault()}
                           onDrop={() => handleDrop(dIdx, aIdx)}
                         >
-                          {/* Floating Controls */}
                           <div className="absolute top-4 right-4 flex gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
+                              type="button"
                               onClick={()=>handleMoveActivity(dIdx, aIdx, aIdx-1)} 
                               disabled={aIdx === 0} 
                               className="w-10 h-10 rounded-full bg-white shadow-md border border-slate-100 flex items-center justify-center hover:bg-slate-50 disabled:opacity-30"
@@ -469,6 +461,7 @@ const App: React.FC = () => {
                               <span className="material-symbols-rounded text-slate-500">arrow_upward</span>
                             </button>
                             <button 
+                              type="button"
                               onClick={()=>handleMoveActivity(dIdx, aIdx, aIdx+1)} 
                               disabled={aIdx === day.activities.length-1} 
                               className="w-10 h-10 rounded-full bg-white shadow-md border border-slate-100 flex items-center justify-center hover:bg-slate-50 disabled:opacity-30"
@@ -477,6 +470,7 @@ const App: React.FC = () => {
                               <span className="material-symbols-rounded text-slate-500">arrow_downward</span>
                             </button>
                             <button 
+                              type="button"
                               onClick={(e)=>{ e.stopPropagation(); handleDeleteActivity(dIdx, aIdx); }} 
                               className="w-10 h-10 rounded-full bg-red-500 shadow-lg border border-red-600 flex items-center justify-center hover:bg-red-600 transition-all transform hover:scale-110"
                               title="이 카드 삭제"
@@ -504,6 +498,7 @@ const App: React.FC = () => {
                         
                         <div className="flex justify-center -my-4 relative z-10">
                           <button 
+                            type="button"
                             onClick={() => openPlacePicker(dIdx, aIdx, act.lat, act.lng)}
                             className="w-12 h-12 bg-brand-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
                             title="주변 장소 추가"
@@ -518,19 +513,25 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            <div className="pt-10 relative">  {/* 공유하기 아이콘 버튼 */}
-              <button onClick={handleCopyUrl} className="absolute -top-4 right-2 w-12 h-12 rounded-full bg-white text-[#00A980] border border-[#00A980]/30 shadow-md hover:bg-[#00A980]/10 transition-all flex items-center justify-center"
-              aria-label="공유하기">
-              type="button">
-              <span className="material-symbols-rounded text-xl">share</span> </button>
-            <div className="pt-10 grid grid-cols-2 gap-4">
-              <button onClick={savePlan} className="py-6 bg-brand-500 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 shadow-xl shadow-brand-100 hover:bg-brand-600 transition-colors "type="button">저장하기</button>
-              <button onClick={() => setStep('form')} className="py-6 bg-brand-900 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 hover:bg-black transition-colors" type="button"> 새 여정 설계</button>
+            <div className="pt-10 relative">
+              <div className="absolute -top-6 right-2">
+                <button 
+                  type="button" 
+                  onClick={handleCopyUrl} 
+                  className="w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center text-slate-500 hover:text-brand-500 hover:scale-110 transition-all"
+                  title="여정 공유하기"
+                >
+                  <span className="material-symbols-rounded">share</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <button type="button" onClick={savePlan} className="py-6 bg-brand-500 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 shadow-xl shadow-brand-100 hover:bg-brand-600 transition-colors">저장하기</button>
+                <button type="button" onClick={() => setStep('form')} className="py-6 bg-brand-900 text-white rounded-3xl font-black text-lg flex items-center justify-center gap-2 hover:bg-black transition-colors">새 여정 설계</button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Modal and Mypage omitted for brevity but remain in real implementation */}
         {isPickingPlace && (
           <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
             <div className="bg-white w-full max-w-xl rounded-[3rem] shadow-2xl overflow-hidden fade-in-up">
@@ -610,6 +611,14 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Custom Toast Notification */}
+      <div 
+        className={`fixed bottom-10 left-1/2 -translate-x-1/2 bg-brand-900 text-white px-8 py-4 rounded-full font-black shadow-2xl z-[200] transition-all duration-300 flex items-center gap-3 ${showToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+      >
+        <span className="material-symbols-rounded text-brand-500">content_copy</span>
+        공유할 링크가 복사됐어요!
+      </div>
     </div>
   );
 };
